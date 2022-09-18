@@ -2,38 +2,64 @@ Class {
 	#name : #SmokeTest,
 	#superclass : #Object,
 	#instVars : [
-		'listenSocket'
+		'listenSocket',
+		'port'
 	],
 	#category : #ProtoHackers
 }
 
-{ #category : #visiting }
-SmokeTest >> acceptClient: aListener [
+{ #category : #'private - helpers' }
+SmokeTest >> acceptLoop [
 	"comment stating purpose of instance-side method"
 	"scope: class-variables  &  instance-variables"	
 			
-	| client |
-	client := aListener accept.
-	('Client connected: {1}' format: {client}) traceCr.
-	[ [ self clientLoop: client ] repeat ] fork.
-
+	| socket |
+	(listenSocket isValid) ifFalse: [ ^ false ].
+	socket := listenSocket accept.
+	self crTrace: 'Client connected'.
+	[ [ self clientLoop: socket ] whileTrue ] fork.
+	^true.
 ]
 
 { #category : #'private - helpers' }
 SmokeTest >> clientLoop: aSocket [
+	"comment stating purpose of instance-side method"
+	"scope: class-variables  &  instance-variables"	
+			
 	| data |
+	aSocket isValid ifFalse: [ ^false ].
 	data := aSocket receiveData.
 	aSocket sendData: data.
-	self crTrace: ('Echoed {1} bytes' format: { data size. })
-
+	^true.
 ]
 
 { #category : #accessing }
-SmokeTest >> start: aPort [
+SmokeTest >> port [
+
+	^ port
+]
+
+{ #category : #accessing }
+SmokeTest >> port: anObject [
+
+	port := anObject
+]
+
+{ #category : #'start-stop' }
+SmokeTest >> start [
 	"start the server"	
-	| socket |
-	socket := Socket newTCP.
-	socket listenOn: aPort backlogSize: 10.
-	self crTrace: ('Listening on {1}' format: { aPort }).
-	[ [ self acceptClient: socket ] repeat. ] fork.
+	|  |
+	listenSocket := Socket newTCP.
+	listenSocket listenOn: port backlogSize: 10.
+	self crTrace: ('Listening on {1}' format: { port }).
+	[ [ ^self acceptLoop ] whileTrue ] fork.
+]
+
+{ #category : #'start-stop' }
+SmokeTest >> stop [
+	"comment stating purpose of instance-side method"
+	"scope: class-variables  &  instance-variables"	
+			
+	| |
+	listenSocket isValid ifTrue: [  listenSocket close. ].
 ]
