@@ -14,8 +14,13 @@ SmokeTest >> acceptLoop [
 	"scope: class-variables  &  instance-variables"	
 			
 	| socket |
-	(listenSocket isValid) ifFalse: [ ^ false ].
-	socket := listenSocket accept.
+	listenSocket isValid ifFalse: [ ^ false ].
+	self crTrace: 'Waiting for client to connect.'.
+	socket := listenSocket waitForAcceptFor: 30s.
+	socket ifNil: [ 
+		self crTrace: 'No client connected yet, looping'.
+		^true
+	].
 	self crTrace: 'Client connected'.
 	[ [ self clientLoop: socket ] whileTrue ] fork.
 	^true.
@@ -27,7 +32,10 @@ SmokeTest >> clientLoop: aSocket [
 	"scope: class-variables  &  instance-variables"	
 			
 	| data |
-	aSocket isValid ifFalse: [ ^false ].
+	aSocket isConnected ifFalse: [
+		'Client disconnected' traceCr.
+		^false
+	].
 	data := aSocket receiveData.
 	aSocket sendData: data.
 	^true.
@@ -52,7 +60,10 @@ SmokeTest >> start [
 	listenSocket := Socket newTCP.
 	listenSocket listenOn: port backlogSize: 10.
 	self crTrace: ('Listening on {1}' format: { port }).
-	[ [ ^self acceptLoop ] whileTrue ] fork.
+	[
+		[ ^(self acceptLoop) ] whileTrue.
+		self crTrace: 'Terminated'.
+	] fork.
 ]
 
 { #category : #'start-stop' }
@@ -61,5 +72,5 @@ SmokeTest >> stop [
 	"scope: class-variables  &  instance-variables"	
 			
 	| |
-	listenSocket isValid ifTrue: [  listenSocket close. ].
+	listenSocket isValid ifTrue: [ listenSocket closeAndDestroy ]
 ]
