@@ -14,7 +14,7 @@ SmokeTest >> acceptLoop [
 	"scope: class-variables  &  instance-variables"	
 			
 	| socket |
-	listenSocket isValid ifFalse: [ ^ false ].
+	listenSocket isValid ifFalse: [ ^false ].
 	self crTrace: 'Waiting for client to connect.'.
 	socket := listenSocket waitForAcceptFor: 30s.
 	socket ifNil: [ 
@@ -30,7 +30,6 @@ SmokeTest >> acceptLoop [
 SmokeTest >> clientLoop: aSocket [
 	"comment stating purpose of instance-side method"
 	"scope: class-variables  &  instance-variables"	
-			
 	| data |
 	aSocket isConnected ifFalse: [
 		'Client disconnected' traceCr.
@@ -38,6 +37,7 @@ SmokeTest >> clientLoop: aSocket [
 	].
 	data := aSocket receiveData.
 	aSocket sendData: data.
+	('Echoed back {1}' format: { data size }) traceCr.
 	^true.
 ]
 
@@ -61,7 +61,7 @@ SmokeTest >> start [
 	listenSocket listenOn: port backlogSize: 10.
 	self crTrace: ('Listening on {1}' format: { port }).
 	[
-		[ ^(self acceptLoop) ] whileTrue.
+		[ self acceptLoop ] whileTrue.
 		self crTrace: 'Terminated'.
 	] fork.
 ]
