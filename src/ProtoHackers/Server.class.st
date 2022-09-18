@@ -73,7 +73,7 @@ Server >> start [
 		[ self listenLoop ] whileTrue.
 		'Listener process terminated' traceCr.
 		process := nil.
-	] fork.
+	] forkNamed: 'Proto Hackers Listen Process'
 
 ]
 
