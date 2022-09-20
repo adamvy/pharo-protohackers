@@ -14,7 +14,7 @@ Class {
 Server >> ensureListener [
 	(listenSocket isNotNil and: [ listenSocket isValid ]) ifTrue: [ ^ self ].
 	listenSocket := Socket newTCP.
-	listenSocket listenOn: port backlogSize: 10
+	listenSocket listenOn: port backlogSize: 10 interface: (SocketAddress fromDottedString: '0.0.0.0')
 ]
 
 { #category : #accessing }
@@ -36,17 +36,22 @@ Server >> isRunning [
 
 { #category : #'private - helpers' }
 Server >> listenLoop [
+
 	| client handler |
-	self isRunning ifFalse: [ ^false ].
+	self isRunning ifFalse: [ ^ false ].
 	self ensureListener.
+	"
 	'Waiting for client for 30s' traceCr.
+	"
 	client := listenSocket waitForAcceptFor: 30.
 	client ifNil: [ ^ true ].
-	('Client connected from: {1}' format: { client remoteAddress }) traceCr.
+	"'Client connected from ' printOn: Transcript.
+	client remoteAddress printOn: Transcript.
+	Transcript cr flush."
 	handler := handlerClass new.
 	handler socket: client.
 	handler fork.
-	^true.
+	^ true
 ]
 
 { #category : #accessing }
@@ -70,9 +75,13 @@ Server >> start [
 	].
 	process := [ 
 		('Server started on port: {1}' format: { port }) traceCr.
-		[ self listenLoop ] whileTrue.
-		'Listener process terminated' traceCr.
-		process := nil.
+		[
+			[ self listenLoop ] whileTrue.
+		] ensure: [
+			listenSocket closeAndDestroy.
+			process := nil.
+			'Listener process terminated' traceCr.
+		]
 	] forkNamed: 'Proto Hackers Listen Process'
 
 ]

@@ -15,10 +15,13 @@ AbstractHandler >> doWork [
 
 { #category : #starting }
 AbstractHandler >> fork [
-	'EchoHandler started' traceCr.
+	('{1} started' format: { self className }) traceCr.
 	[
-		[ self loop ] whileTrue.
-		'EchoHandler ended' traceCr.
+		[ [ self loop ] whileTrue. ]
+			ensure: [
+				('{1} ended' format: { self className }) traceCr.
+				socket closeAndDestroy.
+			]
 	] forkNamed: ('ProtoHackers Client Handler Loop: {1}' format: self className)
 
 ]
@@ -26,7 +29,10 @@ AbstractHandler >> fork [
 { #category : #behavior }
 AbstractHandler >> loop [
 	socket isConnected ifFalse: [ ^false ].
-	^self doWork.
+	^[ self doWork ] on: Error
+		do: [ :e |
+			e traceCr.
+			false. ]
 ]
 
 { #category : #accessing }
