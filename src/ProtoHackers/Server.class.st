@@ -48,8 +48,7 @@ Server >> listenLoop [
 	"'Client connected from ' printOn: Transcript.
 	client remoteAddress printOn: Transcript.
 	Transcript cr flush."
-	handler := handlerClass new.
-	handler socket: client.
+	handler := handlerClass for: client.
 	handler fork.
 	^ true
 ]

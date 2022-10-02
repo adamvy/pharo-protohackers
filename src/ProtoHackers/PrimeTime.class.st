@@ -7,12 +7,26 @@ Class {
 	#category : #ProtoHackers
 }
 
+{ #category : #'instance creation' }
+PrimeTime class >> for: aSocket [
+	^self basicNew initialize stream: (SocketStream on: aSocket)
+]
+
 { #category : #behavior }
 PrimeTime >> doWork [
-	stream ifNil: [ 
-		stream := SocketStream on: socket
+	| line |
+	line := stream nextLineLf.
+	[
+		| response command |
+		command := STONJSON fromString: line.
+		response := self handleCommand: command.
+		STONJSON put: response onStream: stream. 
+		stream nextPut: (Character lf).
+	] on: Error do: [ :e |
+		stream nextPut: 'Error\n'.
 	].
-	^self streamLoop.
+	stream flush.
+	^true
 ]
 
 { #category : #behavior }
@@ -40,21 +54,4 @@ PrimeTime >> stream [
 PrimeTime >> stream: anObject [
 
 	^ stream := anObject
-]
-
-{ #category : #behavior }
-PrimeTime >> streamLoop [
-	| line |
-	line := stream nextLineLf.
-	[
-		| response command |
-		command := STONJSON fromString: line.
-		response := self handleCommand: command.
-		STONJSON put: response onStream: stream. 
-		stream nextPut: (Character lf).
-	] on: Error do: [ :e |
-		stream nextPut: 'Error\n'.
-	].
-	stream flush.
-	^true
 ]

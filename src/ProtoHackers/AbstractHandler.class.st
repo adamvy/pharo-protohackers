@@ -7,6 +7,11 @@ Class {
 	#category : #ProtoHackers
 }
 
+{ #category : #'instance creation' }
+AbstractHandler class >> for: aSocket [
+	^self basicNew initialize socket: aSocket
+]
+
 { #category : #behavior }
 AbstractHandler >> doWork [
 	"template method"
