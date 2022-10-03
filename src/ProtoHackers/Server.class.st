@@ -5,10 +5,15 @@ Class {
 		'port',
 		'process',
 		'listenSocket',
-		'handlerClass'
+		'onConnected'
 	],
 	#category : #ProtoHackers
 }
+
+{ #category : #'instance creation' }
+Server class >> onPort: aPort withHandler: aBlock [
+	^self new port: aPort ; onConnected: aBlock ; start ; yourself.
+]
 
 { #category : #'private - helpers' }
 Server >> ensureListener [
@@ -18,39 +23,44 @@ Server >> ensureListener [
 ]
 
 { #category : #accessing }
-Server >> handlerClass [
-
-	^ handlerClass
-]
-
-{ #category : #accessing }
-Server >> handlerClass: anObject [
-
-	handlerClass := anObject
-]
-
-{ #category : #accessing }
 Server >> isRunning [
 	^process isNotNil.
 ]
 
 { #category : #'private - helpers' }
 Server >> listenLoop [
-
-	| client handler |
+	| client |
 	self isRunning ifFalse: [ ^ false ].
 	self ensureListener.
-	"
-	'Waiting for client for 30s' traceCr.
-	"
 	client := listenSocket waitForAcceptFor: 30.
 	client ifNil: [ ^ true ].
-	"'Client connected from ' printOn: Transcript.
-	client remoteAddress printOn: Transcript.
-	Transcript cr flush."
-	handler := handlerClass for: client.
-	handler fork.
+	Transcript << ('Client connected from {1}' format: {client remoteAddress printString}) ; cr ; endEntry.
+	(onConnected newProcessWith: {client}) name: 'ProtoHackers handler' ; resume.
 	^ true
+]
+
+{ #category : #accessing }
+Server >> listenSocket [
+
+	^ listenSocket
+]
+
+{ #category : #accessing }
+Server >> listenSocket: anObject [
+
+	listenSocket := anObject
+]
+
+{ #category : #accessing }
+Server >> onConnected [
+
+	^ onConnected
+]
+
+{ #category : #accessing }
+Server >> onConnected: anObject [
+
+	onConnected := anObject
 ]
 
 { #category : #accessing }
@@ -63,6 +73,18 @@ Server >> port [
 Server >> port: anObject [
 
 	port := anObject
+]
+
+{ #category : #accessing }
+Server >> process [
+
+	^ process
+]
+
+{ #category : #accessing }
+Server >> process: anObject [
+
+	process := anObject
 ]
 
 { #category : #'start-stop' }
