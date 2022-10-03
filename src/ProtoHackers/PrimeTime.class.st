@@ -9,7 +9,7 @@ Class {
 
 { #category : #'instance creation' }
 PrimeTime class >> for: aSocket [
-	^self basicNew initialize stream: (SocketStream on: aSocket)
+	^(self new) socket: aSocket ; stream: (SocketStream on: aSocket) ; yourself
 ]
 
 { #category : #behavior }
@@ -20,13 +20,11 @@ PrimeTime >> doWork [
 		| response command |
 		command := STONJSON fromString: line.
 		response := self handleCommand: command.
-		STONJSON put: response onStream: stream. 
-		stream nextPut: (Character lf).
+		STONJSON put: response onStream: stream.
 	] on: Error do: [ :e |
-		stream nextPut: 'Error\n'.
+		stream nextPutAll: 'Error'.
 	].
-	stream flush.
-	^true
+	stream nextPut: (Character lf) ; flush.
 ]
 
 { #category : #behavior }

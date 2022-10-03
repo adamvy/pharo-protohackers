@@ -7,37 +7,41 @@ Class {
 	#category : #ProtoHackers
 }
 
+{ #category : #converting }
+AbstractHandler class >> asServer [
+	^self asServer: 8888
+]
+
+{ #category : #converting }
+AbstractHandler class >> asServer: aPort [
+	^Server onPort: aPort
+		withHandler: [ :socket | (self for: socket) go ].
+]
+
 { #category : #'instance creation' }
 AbstractHandler class >> for: aSocket [
-	^self basicNew initialize socket: aSocket
+	^self new socket: aSocket ; yourself.
 ]
 
 { #category : #behavior }
 AbstractHandler >> doWork [
 	"template method"
-	^true
+	socket closeAndDestroy.
 ]
 
 { #category : #starting }
-AbstractHandler >> fork [
-	('{1} started' format: { self className }) traceCr.
+AbstractHandler >> go [
+	Transcript << self className << ' started.' ; cr ; endEntry.
 	[
-		[ [ self loop ] whileTrue. ]
-			ensure: [
-				('{1} ended' format: { self className }) traceCr.
-				socket closeAndDestroy.
-			]
-	] forkNamed: ('ProtoHackers Client Handler Loop: {1}' format: self className)
-
-]
-
-{ #category : #behavior }
-AbstractHandler >> loop [
-	socket isConnected ifFalse: [ ^false ].
-	^[ self doWork ] on: Error
-		do: [ :e |
-			e traceCr.
-			false. ]
+		[
+			socket isConnected ifFalse: [ ^self ].
+			[ self doWork ]
+				on: Error do: [ :e | e traceCr. ^self ].
+		] repeat.
+	] ensure: [ 
+		Transcript << self className << ' ended.' ; cr ; endEntry.
+		socket closeAndDestroy.
+	].
 ]
 
 { #category : #accessing }

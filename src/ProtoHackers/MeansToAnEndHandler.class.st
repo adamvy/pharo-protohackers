@@ -11,27 +11,25 @@ Class {
 
 { #category : #behavior }
 MeansToAnEndHandler >> doWork [
-	| bytesRead |
+	| type arg1 arg2 bytesRead |
 	bytesRead := socket receiveDataInto: buffer startingAt: index.
 	index := index + bytesRead.
-	index == 10 ifTrue: [
-		| type arg1 arg2 |
-		type := (buffer byteAt: 1) asCharacter.
-		arg1 := buffer longAt: 2 bigEndian: true.
-		arg2 := buffer longAt: 6 bigEndian: true.
-		type = $I
-			ifTrue: [
-				Transcript << ('Adding price at {1} price of {2}' format: { arg2 . arg1 }) ; cr ; endEntry.
-				prices add: (AssetPrice new timestamp: arg1 ; price: arg2 ; yourself )
-			].
-		type = $Q
-			ifTrue: [
-				Transcript << ('Query from {1} to {2}' format: { arg1 . arg2 }) ; cr ; endEntry.
-				self queryFrom: arg1 to: arg2.
-			].
-		index := 1.
-	].
-   ^true.
+	index == 10 ifFalse: [ ^self ].
+	
+	type := (buffer byteAt: 1) asCharacter.
+	arg1 := buffer longAt: 2 bigEndian: true.
+	arg2 := buffer longAt: 6 bigEndian: true.
+	type = $I
+		ifTrue: [
+			Transcript << ('Adding price timestamp: {1} price: {2}' format: { arg1 . arg2 }) ; cr ; endEntry.
+			prices add: (AssetPrice new timestamp: arg1 ; price: arg2 ; yourself )
+		].
+	type = $Q
+		ifTrue: [
+			Transcript << ('Query from {1} to {2}' format: { arg1 . arg2 }) ; cr ; endEntry.
+			self queryFrom: arg1 to: arg2.
+		].
+	index := 1.
 ]
 
 { #category : #initialization }

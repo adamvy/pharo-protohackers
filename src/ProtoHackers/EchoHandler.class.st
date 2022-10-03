@@ -9,6 +9,5 @@ EchoHandler >> doWork [
 	| data |
 	data := socket receiveData.
 	socket sendData: data.
-	('Echoed {1} bytes.' format: { data size }) traceCr.
-	^true.
+	Transcript << 'Echoed ' << data size printString << ' bytes' ; cr ; endEntry.
 ]
