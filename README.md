@@ -1,6 +1,6 @@
 # Protohackers in Pharo
 
-(https://protohackers.com)[Protohackers] challenges completed in Pharo smalltalk, cause whynot.
+[Protohackers](https://protohackers.com) challenges completed in Pharo smalltalk, cause whynot.
 
 # Running
 
